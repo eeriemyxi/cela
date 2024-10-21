@@ -362,18 +362,10 @@ async function main(): Promise<void> {
         );
 
         logger.info(
-            colors.bold.yellow("FETCHER EXIT CODE:"),
-            fetcher_exit_code,
-        );
-        logger.info(
-            colors.bold.yellow("UPDATER EXIT CODE:"),
-            updater_exit_code,
-        );
-        logger.info(
             colors.yellow("The operation was"),
             fetcher_exit_code + updater_exit_code == 0
-                ? colors.bold.green("SUCCESSFUL.")
-                : colors.bold.red("UNSUCCESSFUL."),
+                ? colors.bold.green("successful.")
+                : colors.bold.red("unsuccessful."),
         );
         logger.info(
             colors.yellow("Updated version from"),
