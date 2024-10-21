@@ -1,0 +1,31 @@
+on:
+    push:
+        tags:
+            - "v*"
+name: Upload Binaries to Release
+jobs:
+    build:
+        permissions: write-all
+        name: Upload Binaries to Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Setup Deno
+              uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.x
+
+            - name: Setup Fish Shell
+              uses: fish-actions/install-fish@v1.1.0
+
+            - name: Build Binaries
+              run: chmod +x build.fish && ./build.fish
+
+            - name: Upload Binaries to Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: |
+                      bin/*.bin
+                      bin/*.exe

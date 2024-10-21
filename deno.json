@@ -1,0 +1,17 @@
+{
+    "version": "0.1.0",
+    "tasks": {
+        "dev": "deno run --watch src/main.ts",
+        "start": "deno fmt; deno --allow-all src/main.ts",
+        "install": "deno install -gf --name cela --allow-all src/main.ts"
+    },
+    "imports": {
+        "@rabbit-company/logger": "jsr:@rabbit-company/logger@^4.0.1",
+        "@std/path": "jsr:@std/path@^1.0.6",
+        "@std/semver": "jsr:@std/semver@^1.0.3",
+        "@std/yaml": "jsr:@std/yaml@^1.0.5"
+    },
+    "fmt": {
+        "indentWidth": 4
+    }
+}
