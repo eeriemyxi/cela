@@ -1,14 +1,14 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@rabbit-company/logger@*": "4.0.1",
     "jsr:@rabbit-company/logger@^4.0.1": "4.0.1",
+    "jsr:@std/path@*": "1.0.6",
     "jsr:@std/path@^1.0.6": "1.0.6",
     "jsr:@std/semver@*": "1.0.3",
     "jsr:@std/semver@^1.0.3": "1.0.3",
     "jsr:@std/yaml@*": "1.0.5",
-    "jsr:@std/yaml@^1.0.5": "1.0.5",
-    "npm:systeminformation@*": "5.23.5",
-    "npm:systeminformation@^5.23.5": "5.23.5"
+    "jsr:@std/yaml@^1.0.5": "1.0.5"
   },
   "jsr": {
     "@rabbit-company/logger@4.0.1": {
@@ -22,11 +22,6 @@
     },
     "@std/yaml@1.0.5": {
       "integrity": "71ba3d334305ee2149391931508b2c293a8490f94a337eef3a09cade1a2a2742"
-    }
-  },
-  "npm": {
-    "systeminformation@5.23.5": {
-      "integrity": "sha512-PEpJwhRYxZgBCAlWZhWIgfMTjXLqfcaZ1pJsJn9snWNfBW/Z1YQg1mbIUSWrEV3ErAHF7l/OoVLQeaZDlPzkpA=="
     }
   },
   "remote": {
@@ -105,8 +100,7 @@
       "jsr:@rabbit-company/logger@^4.0.1",
       "jsr:@std/path@^1.0.6",
       "jsr:@std/semver@^1.0.3",
-      "jsr:@std/yaml@^1.0.5",
-      "npm:systeminformation@^5.23.5"
+      "jsr:@std/yaml@^1.0.5"
     ]
   }
 }

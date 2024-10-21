@@ -6,20 +6,26 @@ This tool helps you increment/decrement semantic versions in files using custom
 scripts and ergonomic shell commands.
 
 # [Documentation](https://myxi-cela.pages.dev)
+
 For documentation please [go here](https://myxi-cela.pages.dev).
 
 # Installation
-You can download pre-compiled self-contained binaries from [GitHub Releases](https://github.com/eeriemyxi/cela/releases).
+
+You can download pre-compiled self-contained binaries from
+[GitHub Releases](https://github.com/eeriemyxi/cela/releases).
 
 ### Manual
+
 ```shell
 git clone --depth 1 <REPO URL>
 cd cela
 deno run install
 ```
+
 Deno (v2) runtime is required to run.
 
 # Command-line Arguments
+
 ```
 Usage:   cela <parser_name>
 Version: 0.1.0

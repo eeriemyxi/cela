@@ -3,7 +3,7 @@ import Logger from "jsr:@rabbit-company/logger";
 import { parse as yaml_parse } from "jsr:@std/yaml";
 import { colors } from "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts";
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
-import {join, dirname} from "jsr:@std/path"
+import { dirname, join } from "jsr:@std/path";
 
 let [oinfo, odebug, oerror] = [Logger.info, Logger.debug, Logger.error];
 Logger.info = (...args) => {
@@ -35,7 +35,6 @@ Logger.error = (...args) => {
     }
     oerror(str);
 };
-
 const AppInfo = {
     INSTALL_DOC_LINK: "NOT SET",
     PARSERS_DOC_LINK: "NOT SET",
@@ -131,15 +130,19 @@ async function get_config_location(platform) {
     if (platform === "windows") {
         return Deno.env.get(join("APP_DATA", "cela"));
     } else if (platform === "linux") {
-        return Deno.env.get("XDG_CONFIG_HOME") || join(Deno.env.get("HOME"), ".config", "cela")
+        return Deno.env.get("XDG_CONFIG_HOME") ||
+            join(Deno.env.get("HOME"), ".config", "cela");
     } else if (platform === "darwin") {
-        logger.error("Unsupported OS", "Your operating system is not supported.")
-        Deno.exit(1)
+        logger.error(
+            "Unsupported OS",
+            "Your operating system is not supported.",
+        );
+        Deno.exit(1);
     }
 }
 
 async function get_platform() {
-    return Deno.build.os
+    return Deno.build.os;
 }
 
 async function get_config(conf_location, doc_link, conf_filename) {
@@ -318,7 +321,7 @@ async function main() {
 
         matched = true;
 
-        const parser_dir = join(conf.parsers_dir , file.name);
+        const parser_dir = join(conf.parsers_dir, file.name);
         const parser_conf = await get_config(
             parser_dir,
             AppInfo.PARSERS_DOC_LINK,
@@ -360,8 +363,11 @@ async function main() {
         );
         logger.info(
             colors.yellow("Updated version from"),
-            colors.bold.green(fetcher_json.version), colors.yellow("to"),
-            colors.bold.green(semver_obj_to_str(fetcher_json.version, updated_version)) + '.'
+            colors.bold.green(fetcher_json.version),
+            colors.yellow("to"),
+            colors.bold.green(
+                semver_obj_to_str(fetcher_json.version, updated_version),
+            ) + ".",
         );
 
         break;

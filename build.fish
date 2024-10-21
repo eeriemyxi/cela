@@ -12,5 +12,5 @@ set NAME cela
 mkdir -p bin
 
 for i in (seq 1 (count $TARGETS))
-    deno compile --target=$TARGETS[$i] --allow-net --allow-run --output ./bin/$TARGETS[$i]-$NAME$TARGET_EXTENSIONS[$i] src/main.ts
+    deno compile --no-check --target=$TARGETS[$i] --allow-net --allow-run --output ./bin/$TARGETS[$i]-$NAME$TARGET_EXTENSIONS[$i] src/main.ts
 end
