@@ -45,8 +45,8 @@ scripts:
 | `name` | Name of your parser. It doesn't have much use for now. |
 | `scripts` | The scripts for your parser. `fetcher` and `updater` options are available. |
 | `scripts.fetcher` | This script parses the version from target file. More information later.|
-| `scripts.updater` | This script updates the version to the incremented one in the target file |
-| `scripts.[fetcher,updater].program` | The executable that can be accessed from the directories in your path. It will be used to run the script. |
+| `scripts.updater` | This script updates the version to the incremented one in the target file. |
+| `scripts.[fetcher,updater].program` | The executable that can be accessed from the directories in your `$PATH`. It will be used to run the script. |
 | `scripts.[fetcher,updater].args` | The arguments to be used with the executable to make it execute your script. |
 
 In your parser's directory you need to have a source tree like this:
@@ -97,8 +97,8 @@ To complete the example I will include the example script files for `deno`.
 
 ## Expectations From Cela
 
-Fetcher script is expected to output a stringified JSON to `stderr` stream. This
-JSON must contain `version` key which contains the version as a string that is
+Fetcher script is expected to output a stringified JSON to `stdout` stream. This
+JSON must contain a `version` key which contains the version as a string that is
 supposed to be updated.
 
 Updater script will be assigned `CELA_DATA_JSON` environment variable which will
