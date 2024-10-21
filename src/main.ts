@@ -37,8 +37,8 @@ Logger.error = (...args) => {
     oerror(str);
 };
 const AppInfo = {
-    INSTALL_DOC_LINK: "NOT SET",
-    PARSERS_DOC_LINK: "NOT SET",
+    INSTALL_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
+    PARSERS_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSER_NAME: "NOT SET",
     LOG_LEVEL: Logger.Levels.INFO,
     DENO_JSON: await get_deno_json(),
