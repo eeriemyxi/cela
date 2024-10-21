@@ -155,11 +155,12 @@ async function get_config(conf_location, doc_link, conf_filename) {
             throw NotFound;
         }
     } catch (err) {
-        if (err instanceof NotFound) {
-            console.error(
+        if (err.name == "NotFound") {
+            logger.error(
+                "Config File Not Found",
                 "Config file doesn't exist at",
                 conf_location,
-                "\nPlease read the documention at",
+                "\n\n\tPlease read the documention at",
                 doc_link,
             );
             Deno.exit(1);
