@@ -1,6 +1,6 @@
 # Cela
 
-![](https://files.catbox.moe/9uh6yw.png)
+![](https://files.catbox.moe/dladd7.png)
 
 This tool helps you increment/decrement semantic versions in files using custom
 scripts and ergonomic shell commands.
