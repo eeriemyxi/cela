@@ -5,6 +5,7 @@ import { colors } from "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts";
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { dirname, join } from "jsr:@std/path";
 
+// NOTE: please LMK if you know a better way of doing it, thank you!
 let [oinfo, odebug, oerror] = [Logger.info, Logger.debug, Logger.error];
 Logger.info = (...args) => {
     oinfo(args.join(" "));
