@@ -15,6 +15,7 @@ scripts and ergonomic shell commands.
 | `-h, --help`             | Show this help.                                                                   |
 | `-V, --version`          | Show the version number for this program.                                         |
 | `-d, --debug`            | Enable debug logs. Useful if you want to debug your parsers.                      |
+| `-D, --dry-run`          | Do a dry run. Skips running updater script (fetcher script is ran).               |
 | `-r, --no-reset`         | Do not reset by precedence. Disables specification 7 of semantic versioning. Read [here](https://semver.org/#spec-item-7). |
 | `-Z, --no-zero`          | Do not reset when a version is less than 0.                                       |
 | `-C, --custom <version>` | Instead of incrementing, set the version to this string.                          |
