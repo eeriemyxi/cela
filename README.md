@@ -28,7 +28,7 @@ Deno (v2) runtime is required to run.
 
 ```
 Usage:   cela <parser_name>
-Version: 0.1.0
+Version: 0.3.0
 
 Description:
 
@@ -36,13 +36,17 @@ Description:
 
 Options:
 
-  -h, --help     - Show this help.
-  -V, --version  - Show the version number for this program.
-  -d, --debug    - Enable debug logs. Useful if you want to debug your parsers.
-  -M             - Increment MAJOR version by 1. Can be used multiple times.
-  -m             - Increment MINOR version by 1. Can be used multiple times.
-  -p             - Increment PATCH version by 1. Can be used multiple times.
-  -z             - Decrement MAJOR version by 1. Can be used multiple times.
-  -x             - Decrement MINOR version by 1. Can be used multiple times.
-  -c             - Decrement PATCH version by 1. Can be used multiple times.
+  -h, --help                 - Show this help.
+  -V, --version              - Show the version number for this program.
+  -d, --debug                - Enable debug logs. Useful if you want to debug your parsers.
+  -r, --no-reset             - Do not reset by precedence. Disables spec. 7, see
+                               https://semver.org/#spec-item-7
+  -Z, --no-zero              - Do not reset when a version is less than 0.
+  -C, --custom    <version>  - Instead of incrementing, set the version to this string.
+  -M                         - Increment MAJOR version by 1. Can be used multiple times.
+  -m                         - Increment MINOR version by 1. Can be used multiple times.
+  -p                         - Increment PATCH version by 1. Can be used multiple times.
+  -z                         - Decrement MAJOR version by 1. Can be used multiple times.
+  -x                         - Decrement MINOR version by 1. Can be used multiple times.
+  -c                         - Decrement PATCH version by 1. Can be used multiple times.
 ```

@@ -1,8 +1,11 @@
-import * as semver from "jsr:@std/semver";
-import { parse as yaml_parse } from "jsr:@std/yaml";
 import { colors } from "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts";
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
+import { Spinner } from "jsr:@std/cli/unstable-spinner";
+
+import * as semver from "jsr:@std/semver";
+import { parse as yaml_parse } from "jsr:@std/yaml";
 import { dirname, join } from "jsr:@std/path";
+
 import { LoggerMod as Logger } from "./logger.ts";
 
 interface ParserConfig {
@@ -28,12 +31,21 @@ const AppInfo = {
     PARSERS_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSER_NAME: "NOT SET",
     LOG_LEVEL: Logger.Levels.INFO,
+    ENABLE_RESET_STATES: true,
+    ENABLE_MINUS_CHECK: true,
+    CUSTOM_VERSION: "",
     DENO_JSON: await get_deno_json(),
 };
 
 const decoder = new TextDecoder();
 
 const Increments = {
+    MAJOR: 0,
+    MINOR: 0,
+    PATCH: 0,
+};
+
+const version_reset_states: { [key: string]: number } = {
     MAJOR: 0,
     MINOR: 0,
     PATCH: 0,
@@ -54,16 +66,48 @@ const _cela = await new Command()
             },
         },
     )
+    .option(
+        "-r, --no-reset",
+        "Do not reset by precedence. Disables spec. 7, see https://semver.org/#spec-item-7",
+        {
+            action: (_) => {
+                AppInfo.ENABLE_RESET_STATES = false;
+            },
+        },
+    )
+    .option(
+        "-Z, --no-zero",
+        "Do not reset when a version is less than 0.",
+        {
+            action: (_) => {
+                AppInfo.ENABLE_MINUS_CHECK = false;
+            },
+        },
+    )
+    .option(
+        "-C, --custom <version:string>",
+        "Instead of incrementing, set the version to this string.",
+        {
+            action: (options) => {
+                if (options["custom"] !== undefined) {
+                    AppInfo.CUSTOM_VERSION = options["custom"];
+                }
+            },
+        },
+    )
     .option("-M", "Increment MAJOR version by 1. Can be used multiple times.", {
         collect: true,
         action: (_) => {
             Increments.MAJOR += 1;
+            version_reset_states.MINOR++;
+            version_reset_states.PATCH++;
         },
     })
     .option("-m", "Increment MINOR version by 1. Can be used multiple times.", {
         collect: true,
         action: (_) => {
             Increments.MINOR += 1;
+            version_reset_states.PATCH++;
         },
     })
     .option("-p", "Increment PATCH version by 1. Can be used multiple times.", {
@@ -97,6 +141,8 @@ const _cela = await new Command()
     .parse(Deno.args);
 
 const logger = Logger;
+const spinner = new Spinner({ message: "Loading..." });
+spinner.start();
 
 logger.format = "[{type}] {message}";
 logger.level = AppInfo.LOG_LEVEL;
@@ -181,19 +227,43 @@ function update_version(
     logger.debug("called", "update_version");
 
     const clone_version = structuredClone(version);
+    const codes = ["MAJOR", "MINOR", "PATCH"];
 
-    for (const vers of ["MAJOR", "MINOR", "PATCH"]) {
-        clone_version[vers.toLowerCase()] += inc[vers];
-        let new_vers = clone_version[vers.toLowerCase()];
+    for (const vers of codes) {
+        const lvers = <"major" | "minor" | "patch"> vers.toLowerCase();
+        clone_version[lvers] += inc[<"MAJOR" | "MINOR" | "PATCH"> vers];
 
-        if (new_vers < 0) {
+        let new_vers = clone_version[lvers];
+        const old_vers = new_vers;
+        let reason = "NOT SET";
+        let reset = false;
+
+        if (new_vers < 0 && AppInfo.ENABLE_MINUS_CHECK) {
+            new_vers = 0;
+            reason = "updated version was less than 0. See -Z option.";
+            reset = true;
+        } else if (
+            version_reset_states[vers] > 0 && new_vers > 0 &&
+            AppInfo.ENABLE_RESET_STATES
+        ) {
+            new_vers = 0;
+            reason =
+                "it was supposed to be reset back to 0 as per protocol. See -r option.";
+            reset = true;
+        }
+
+        if (reset) {
+            spinner.stop();
             logger.warn(
                 `${vers} version has been updated from ${
-                    colors.bold.green(String(new_vers))
-                } ${colors.yellow("to")} ${colors.bold.green("0")}.`,
+                    colors.bold.green(String(old_vers))
+                } ${colors.yellow("to")} ${colors.bold.green("0")} ${
+                    colors.yellow("because " + reason)
+                }`,
             );
-            clone_version[vers.toLowerCase()] = 0;
+            spinner.start();
         }
+        clone_version[lvers] = new_vers;
     }
 
     logger.debug("original version", version);
@@ -279,7 +349,7 @@ async function trigger_updater_command(
     parser_conf: ParserConfig,
     parser_dir: string,
     fetcher_json: { version: string },
-    version: semver.SemVer,
+    version?: semver.SemVer,
 ): Promise<number> {
     const updater_command = new Deno.Command(
         parser_conf.scripts.updater.program,
@@ -289,10 +359,12 @@ async function trigger_updater_command(
             env: {
                 CELA_CWD: Deno.cwd(),
                 CELA_DATA_JSON: JSON.stringify({
-                    version: semver_obj_to_str(
-                        fetcher_json.version,
-                        version,
-                    ),
+                    version: (version === undefined)
+                        ? AppInfo.CUSTOM_VERSION
+                        : semver_obj_to_str(
+                            fetcher_json.version,
+                            version,
+                        ),
                     fetcher_json: fetcher_json,
                 }),
             },
@@ -326,6 +398,7 @@ async function main(): Promise<void> {
     logger.debug("config", conf);
     logger.debug("parsers dir", parsers_dir);
 
+    spinner.message = `Looking for ${AppInfo.PARSER_NAME}...`;
     for await (const file of parsers_dir) {
         logger.debug("file", file);
 
@@ -343,6 +416,7 @@ async function main(): Promise<void> {
             continue;
         }
 
+        spinner.message = `Found ${file.name}`;
         matched = true;
 
         const parser_dir = join(conf.parsers_dir, file.name);
@@ -353,6 +427,8 @@ async function main(): Promise<void> {
         );
         logger.debug("parser conf", parser_conf);
 
+        spinner.message =
+            `Running fetcher script for ${AppInfo.PARSER_NAME}...`;
         const [fetcher_version, fetcher_json, fetcher_exit_code] =
             await trigger_fetcher_command(
                 parser_conf,
@@ -364,13 +440,16 @@ async function main(): Promise<void> {
             fetcher_version,
         );
 
+        spinner.message =
+            `Running updater script for ${AppInfo.PARSER_NAME}...`;
         const updater_exit_code = await trigger_updater_command(
             parser_conf,
             parser_dir,
             fetcher_json,
-            updated_version,
+            AppInfo.CUSTOM_VERSION ? undefined : updated_version,
         );
 
+        spinner.stop();
         logger.info(
             colors.yellow("The operation was"),
             fetcher_exit_code + updater_exit_code == 0
@@ -382,7 +461,14 @@ async function main(): Promise<void> {
             colors.bold.green(fetcher_json.version),
             colors.yellow("to"),
             colors.bold.green(
-                semver_obj_to_str(fetcher_json.version, updated_version),
+                AppInfo.CUSTOM_VERSION != ""
+                    ? `${AppInfo.CUSTOM_VERSION} (${
+                        colors.bold.cyan("custom")
+                    })`
+                    : semver_obj_to_str(
+                        fetcher_json.version,
+                        updated_version,
+                    ),
             ) + ".",
         );
 

@@ -3,6 +3,8 @@
   "specifiers": {
     "jsr:@rabbit-company/logger@*": "4.0.1",
     "jsr:@rabbit-company/logger@^4.0.1": "4.0.1",
+    "jsr:@std/cli@*": "1.0.6",
+    "jsr:@std/cli@^1.0.6": "1.0.6",
     "jsr:@std/path@*": "1.0.6",
     "jsr:@std/path@^1.0.6": "1.0.6",
     "jsr:@std/semver@*": "1.0.3",
@@ -13,6 +15,9 @@
   "jsr": {
     "@rabbit-company/logger@4.0.1": {
       "integrity": "98c8c3dd12801fa3b4ae2fed9da0b59981bc091c36d5a727abaa3c45d8791bfd"
+    },
+    "@std/cli@1.0.6": {
+      "integrity": "d22d8b38c66c666d7ad1f2a66c5b122da1704f985d3c47f01129f05abb6c5d3d"
     },
     "@std/path@1.0.6": {
       "integrity": "ab2c55f902b380cf28e0eec501b4906e4c1960d13f00e11cfbcd21de15f18fed"
@@ -98,6 +103,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@rabbit-company/logger@^4.0.1",
+      "jsr:@std/cli@^1.0.6",
       "jsr:@std/path@^1.0.6",
       "jsr:@std/semver@^1.0.3",
       "jsr:@std/yaml@^1.0.5"
