@@ -36,8 +36,8 @@ E.g., `cela -MMp deno` would call the `deno` parser to update the version.
 
 ### Examples
 
-<!-- deno-fmt-ignore -->
-!!! example
+<!-- deno-fmt-ignore-start-->
+=== "Example I"
     ```
     > cela -MMppm deno
     [WARN] MINOR version has been updated from 2 to 0 because it was supposed to be reset back to 0 as per protocol. See -r option.
@@ -45,9 +45,7 @@ E.g., `cela -MMp deno` would call the `deno` parser to update the version.
     [INFO] The operation was successful.
     [INFO] Updated version from 0.1.0 to 2.0.0.
     ```
-
-<!-- deno-fmt-ignore -->
-!!! example
+=== "Example II"
     ```
     > cela -MMzmmxppc python
     [WARN] MINOR version has been updated from 2 to 0 because it was supposed to be reset back to 0 as per protocol. See -r option.
@@ -55,22 +53,19 @@ E.g., `cela -MMp deno` would call the `deno` parser to update the version.
     [INFO] The operation was successful.
     [INFO] Updated version from 0.1.0 to 1.0.0.
     ```
-
-<!-- deno-fmt-ignore -->
-!!! example
+=== "Example III"
     ```
     > cela -rMMzmmxppc deno
     [INFO] The operation was successful.
     [INFO] Updated version from 0.1.0 to 1.2.1.
     ```
-
-<!-- deno-fmt-ignore -->
-!!! example
+=== "Example IV"
     ```
     > cela -C 0.1.0 deno
     [INFO] The operation was successful.
     [INFO] Updated version from 1.2.1 to 0.1.0 (custom).
     ```
+<!-- deno-fmt-ignore-end-->
 
 ## Custom Parsers
 
