@@ -16,9 +16,20 @@ jobs:
               uses: denoland/setup-deno@v2
               with:
                   deno-version: v2.x
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
 
             - name: Setup Fish Shell
               uses: fish-actions/install-fish@v1.1.0
+
+            - name: Generate Release Notes
+              run: |
+                  pip install git-cliff
+                  git-cliff -l -o RELEASE-NOTES.md
+                  echo "RELEASE-NOTES.md:\n"
+                  cat RELEASE-NOTES.md
 
             - name: Build Binaries
               run: chmod +x build.fish && ./build.fish
@@ -26,6 +37,7 @@ jobs:
             - name: Upload Binaries to Release
               uses: softprops/action-gh-release@v2
               with:
+                  body_path: RELEASE-NOTES.md
                   files: |
                       bin/*.bin
                       bin/*.exe
