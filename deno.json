@@ -1,5 +1,5 @@
 {
-    "version": "0.4.1",
+    "version": "0.4.2",
     "tasks": {
         "start": "deno fmt; deno --check --allow-all src/main.ts",
         "install": "deno install -gf --name cela --allow-all src/main.ts"
