@@ -8,6 +8,24 @@ import { dirname, join } from "jsr:@std/path";
 import { LoggerMod } from "./logger.ts";
 import { construct_cela_cli } from "./cela_cli.ts";
 
+interface ParserConfig {
+    name: string;
+    scripts: {
+        fetcher: {
+            program: string;
+            args: string;
+        };
+        updater: {
+            program: string;
+            args: string;
+        };
+    };
+}
+
+interface CelaConfig {
+    parsers_dir: string;
+}
+
 export const AppInfo = {
     INSTALL_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSERS_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
