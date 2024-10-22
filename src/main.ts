@@ -182,9 +182,19 @@ function update_version(
 
     const clone_version = structuredClone(version);
 
-    clone_version.major += inc.MAJOR;
-    clone_version.minor += inc.MINOR;
-    clone_version.patch += inc.PATCH;
+    for (const vers of ["MAJOR", "MINOR", "PATCH"]) {
+        clone_version[vers.toLowerCase()] += inc[vers];
+        let new_vers = clone_version[vers.toLowerCase()];
+
+        if (new_vers < 0) {
+            logger.warn(
+                `${vers} version has been updated from ${
+                    colors.bold.green(String(new_vers))
+                } ${colors.yellow("to")} ${colors.bold.green("0")}.`,
+            );
+            clone_version[vers.toLowerCase()] = 0;
+        }
+    }
 
     logger.debug("original version", version);
     logger.debug("updated version", clone_version);
