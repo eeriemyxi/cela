@@ -18,6 +18,7 @@ jobs:
               uses: denoland/setup-deno@v2
               with:
                   deno-version: v2.x
+
             - name: Setup Python
               uses: actions/setup-python@v5
               with:

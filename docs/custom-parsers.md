@@ -54,7 +54,7 @@ scripts:
 
 In your parser's directory you need to have a source tree like this:
 
-```
+``` title=".../deno/"
 .
 ├── cela.yml
 ├── fetcher.py
