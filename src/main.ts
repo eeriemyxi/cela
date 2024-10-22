@@ -57,18 +57,8 @@ if (AppInfo.ENABLE_DRY_RUN) {
     logger.warn("Dry running is enabled.");
 }
 
-async function get_deno_json(): Promise<{ version: string }> {
-    if (import.meta.dirname === undefined) {
-        logger.error(
-            "import.meta.dirname unavailable",
-            "Something is wrong with your machine, sorry.",
-        );
-        Deno.exit(1);
-    }
-    const path = join(dirname(import.meta.dirname), "deno.json");
-    return JSON.parse(
-        await Deno.readTextFile(path),
-    );
+function get_platform(): typeof Deno.build.os {
+    return Deno.build.os;
 }
 
 function get_or_throw(obj: Deno.Env, key: string): string {
@@ -80,6 +70,16 @@ function get_or_throw(obj: Deno.Env, key: string): string {
     }
 }
 
+function semver_obj_to_str(unformatted: string, ver: semver.SemVer): string {
+    const lead = unformatted.charAt(0);
+    let formatted = semver.format(ver);
+
+    if (lead == "=" || lead == "v") {
+        formatted = lead + formatted;
+    }
+
+    return formatted;
+}
 function get_config_location(platform: string): string {
     logger.debug("platform", platform);
 
@@ -95,35 +95,6 @@ function get_config_location(platform: string): string {
         "Your operating system is not supported.",
     );
     Deno.exit(1);
-}
-
-function get_platform(): typeof Deno.build.os {
-    return Deno.build.os;
-}
-
-async function get_config(
-    conf_location: string,
-    doc_link: string,
-    conf_filename: string,
-): Promise<CelaConfig | ParserConfig> {
-    conf_location = join(conf_location, conf_filename);
-
-    try {
-        const _ = await Deno.lstat(conf_location);
-    } catch (err) {
-        logger.error(
-            "Config File Not Found",
-            "Config file doesn't exist at",
-            conf_location,
-            "\n\n\tPlease read the documention at",
-            doc_link,
-        );
-        throw err;
-    }
-    const text = await Deno.readTextFile(conf_location);
-    const conf = <CelaConfig | ParserConfig> yaml_parse(text);
-
-    return conf;
 }
 
 function update_version(
@@ -178,20 +149,73 @@ function update_version(
     return clone_version;
 }
 
-function semver_obj_to_str(unformatted: string, ver: semver.SemVer): string {
-    const lead = unformatted.charAt(0);
-    let formatted = semver.format(ver);
-
-    if (lead == "=" || lead == "v") {
-        formatted = lead + formatted;
+async function get_deno_json(): Promise<{ version: string }> {
+    if (import.meta.dirname === undefined) {
+        logger.error(
+            "import.meta.dirname unavailable",
+            "Something is wrong with your machine, sorry.",
+        );
+        Deno.exit(1);
     }
-
-    return formatted;
+    const path = join(dirname(import.meta.dirname), "deno.json");
+    return JSON.parse(
+        await Deno.readTextFile(path),
+    );
 }
 
+async function match_parsers_dir(parsers_dir: string, parser_name: string) {
+    const parsers_dir_iter = await Deno.readDir(parsers_dir);
+
+    for await (const file of parsers_dir_iter) {
+        logger.debug("file", file);
+
+        if (!file.isDirectory) {
+            logger.debug("skipping", file, "because it's not a directory");
+            continue;
+        }
+
+        if (file.name != parser_name) {
+            logger.debug(
+                "skipping",
+                file,
+                "because it ditn't match PARSER_NAME",
+            );
+            continue;
+        }
+
+        return file;
+    }
+    return undefined;
+}
+
+async function get_config(
+    conf_location: string,
+    doc_link: string,
+    conf_filename: string,
+): Promise<CelaConfig | ParserConfig> {
+    conf_location = join(conf_location, conf_filename);
+
+    try {
+        const _ = await Deno.lstat(conf_location);
+    } catch (err) {
+        logger.error(
+            "Config File Not Found",
+            "Config file doesn't exist at",
+            conf_location,
+            "\n\n\tPlease read the documention at",
+            doc_link,
+        );
+        throw err;
+    }
+    const text = await Deno.readTextFile(conf_location);
+    const conf = <CelaConfig | ParserConfig> yaml_parse(text);
+
+    return conf;
+}
 async function trigger_fetcher_command(
     parser_conf: ParserConfig,
     parser_dir: string,
+    cwd: string,
 ): Promise<[semver.SemVer, { version: string }, number]> {
     const fetcher_command = new Deno.Command(
         parser_conf.scripts.fetcher.program,
@@ -199,7 +223,7 @@ async function trigger_fetcher_command(
             args: [parser_conf.scripts.fetcher.args],
             cwd: parser_dir,
             env: {
-                CELA_CWD: Deno.cwd(),
+                CELA_CWD: cwd,
             },
         },
     );
@@ -255,7 +279,8 @@ async function trigger_updater_command(
     parser_conf: ParserConfig,
     parser_dir: string,
     fetcher_json: { version: string },
-    version?: semver.SemVer,
+    version: string,
+    cwd: string,
 ): Promise<number> {
     if (AppInfo.ENABLE_DRY_RUN) {
         logger.debug(
@@ -271,14 +296,9 @@ async function trigger_updater_command(
             args: [parser_conf.scripts.updater.args],
             cwd: parser_dir,
             env: {
-                CELA_CWD: Deno.cwd(),
+                CELA_CWD: cwd,
                 CELA_DATA_JSON: JSON.stringify({
-                    version: (version === undefined)
-                        ? AppInfo.CUSTOM_VERSION
-                        : semver_obj_to_str(
-                            fetcher_json.version,
-                            version,
-                        ),
+                    version: version,
                     fetcher_json: fetcher_json,
                 }),
             },
@@ -299,107 +319,102 @@ async function trigger_updater_command(
 
 async function main(): Promise<void> {
     const platform = get_platform();
-    const conf_location = get_config_location(platform);
-    const conf: CelaConfig = await <Promise<CelaConfig>> get_config(
-        conf_location,
+    const cela_conf_location = get_config_location(platform);
+    const cela_conf: CelaConfig = await <Promise<CelaConfig>> get_config(
+        cela_conf_location,
         AppInfo.INSTALL_DOC_LINK,
         "config.yml",
     );
-    const parsers_dir = await Deno.readDir(conf.parsers_dir);
 
-    let matched = false;
-
-    logger.debug("config", conf);
-    logger.debug("parsers dir", parsers_dir);
+    logger.debug("cela_conf", cela_conf);
 
     spinner.message = `Looking for ${AppInfo.PARSER_NAME}...`;
-    for await (const file of parsers_dir) {
-        logger.debug("file", file);
 
-        if (!file.isDirectory) {
-            logger.debug("skipping", file, "because it's not a directory");
-            continue;
-        }
+    const _raw_parser_dir = await match_parsers_dir(
+        cela_conf.parsers_dir,
+        AppInfo.PARSER_NAME,
+    );
 
-        if (file.name != AppInfo.PARSER_NAME) {
-            logger.debug(
-                "skipping",
-                file,
-                "because it ditn't match PARSER_NAME",
-            );
-            continue;
-        }
-
-        spinner.message = `Found ${file.name}`;
-        matched = true;
-
-        const parser_dir = join(conf.parsers_dir, file.name);
-        const parser_conf = await <Promise<ParserConfig>> get_config(
-            parser_dir,
-            AppInfo.PARSERS_DOC_LINK,
-            "cela.yml",
-        );
-        logger.debug("parser conf", parser_conf);
-
-        spinner.message =
-            `Running fetcher script for ${AppInfo.PARSER_NAME}...`;
-        const [fetcher_version, fetcher_json, fetcher_exit_code] =
-            await trigger_fetcher_command(
-                parser_conf,
-                parser_dir,
-            );
-
-        const updated_version = update_version(
-            Increments,
-            fetcher_version,
-        );
-
-        spinner.message =
-            `Running updater script for ${AppInfo.PARSER_NAME}...`;
-        const updater_exit_code = await trigger_updater_command(
-            parser_conf,
-            parser_dir,
-            fetcher_json,
-            AppInfo.CUSTOM_VERSION ? undefined : updated_version,
-        );
-
-        spinner.stop();
-        logger.info(
-            colors.yellow("The operation was"),
-            fetcher_exit_code + updater_exit_code == 0
-                ? colors.bold.green("successful.")
-                : colors.bold.red("unsuccessful."),
-        );
-        logger.info(
-            colors.yellow("Updated version from"),
-            colors.bold.green(fetcher_json.version),
-            colors.yellow("to"),
-            colors.bold.green(
-                AppInfo.CUSTOM_VERSION != ""
-                    ? `${AppInfo.CUSTOM_VERSION} (${
-                        colors.bold.cyan("custom")
-                    })`
-                    : semver_obj_to_str(
-                        fetcher_json.version,
-                        updated_version,
-                    ),
-            ) + ".",
-        );
-
-        break;
+    if (_raw_parser_dir === undefined) {
+        throw new Error("_raw_parser_dir is undefined");
     }
 
-    if (!matched) {
+    const parser_dir = join(
+        cela_conf.parsers_dir,
+        _raw_parser_dir.name,
+    );
+
+    if (parser_dir === undefined) {
         spinner.stop();
         logger.error(
             "Invalid Parser Name",
             " parser name",
             '"' + AppInfo.PARSER_NAME + '"',
             "did not match any directory in",
-            conf.parsers_dir,
+            cela_conf.parsers_dir,
         );
         Deno.exit(1);
     }
+
+    spinner.message = `Found ${parser_dir}`;
+
+    const parser_conf = await <Promise<ParserConfig>> get_config(
+        parser_dir,
+        AppInfo.PARSERS_DOC_LINK,
+        "cela.yml",
+    );
+
+    logger.debug("parser_conf", parser_conf);
+    spinner.message = `Running fetcher script for ${AppInfo.PARSER_NAME}...`;
+
+    const [fetcher_version, fetcher_json, fetcher_exit_code] =
+        await trigger_fetcher_command(
+            parser_conf,
+            parser_dir,
+            Deno.cwd(),
+        );
+
+    const updated_version = update_version(
+        Increments,
+        fetcher_version,
+    );
+
+    spinner.message = `Running updater script for ${AppInfo.PARSER_NAME}...`;
+
+    const updater_exit_code = await trigger_updater_command(
+        parser_conf,
+        parser_dir,
+        fetcher_json,
+        (AppInfo.CUSTOM_VERSION != "")
+            ? AppInfo.CUSTOM_VERSION
+            : semver_obj_to_str(
+                fetcher_json.version,
+                updated_version,
+            ),
+        Deno.cwd(),
+    );
+
+    spinner.stop();
+
+    logger.info(
+        colors.yellow("The operation was"),
+        fetcher_exit_code + updater_exit_code == 0
+            ? colors.bold.green("successful.")
+            : colors.bold.red("unsuccessful."),
+    );
+    logger.info(
+        colors.yellow("Updated version from"),
+        colors.bold.green(fetcher_json.version),
+        colors.yellow("to"),
+        colors.bold.green(
+            AppInfo.CUSTOM_VERSION != ""
+                ? `${AppInfo.CUSTOM_VERSION} (${colors.bold.cyan("custom")})`
+                : semver_obj_to_str(
+                    fetcher_json.version,
+                    updated_version,
+                ),
+        ) + ".",
+    );
 }
 
 if (import.meta.main) {
