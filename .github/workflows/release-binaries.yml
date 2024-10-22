@@ -27,8 +27,12 @@ jobs:
               uses: fish-actions/install-fish@v1.1.0
 
             - name: Generate Release Notes
+              env:
+                  CG_CONFIG_URL: "https://gist.githubusercontent.com/eeriemyxi/da2edd0187f157f3de1f2dc74bdb6426/raw/6dc75529abb9ce54b5dc3ed2cc83afbb55691443/cliff.toml"
+                  CG_REPO_URL: ${{github.server_url}}/${{github.repository}}
               run: |
                   pip install git-cliff
+                  curl -s "$CG_CONFIG_URL" | python -c "import sys,os;lines=sys.stdin.read();print(lines.replace('{{REPO}}',os.environ['CG_REPO_URL']))" > cliff.toml
                   git-cliff -l -o RELEASE-NOTES.md
                   echo "RELEASE-NOTES.md:\n"
                   cat RELEASE-NOTES.md
