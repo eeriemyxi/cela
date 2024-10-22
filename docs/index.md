@@ -3,7 +3,7 @@
 This tool helps you increment/decrement semantic versions in files using custom
 scripts and ergonomic shell commands.
 
-# How To Use
+## How to Use
 
 <!-- deno-fmt-ignore -->
 !!! tip
@@ -33,7 +33,7 @@ You can then provide the parser id (the folder name under
 [`parsers_dir`](/custom-parsers/#custom-parsers) directory) as an argument.
 E.g., `cela -MMp deno` would call the `deno` parser to update the version.
 
-## Examples
+### Examples
 
 <!-- deno-fmt-ignore -->
 !!! example
@@ -71,6 +71,6 @@ E.g., `cela -MMp deno` would call the `deno` parser to update the version.
     [INFO] Updated version from 1.2.1 to 0.1.0 (custom).
     ```
 
-# Custom Parsers
+## Custom Parsers
 
 See [Custom Parsers](/custom-parsers).

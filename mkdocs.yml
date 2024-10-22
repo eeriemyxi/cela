@@ -20,6 +20,10 @@ theme:
           toggle:
               icon: material/brightness-7
               name: Switch to dark mode
+    features:
+        - content.code.copy
+        - content.code.select
+        - content.code.annotate
 extra_css:
     - css/extra.css
 

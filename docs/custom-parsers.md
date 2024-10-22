@@ -10,12 +10,15 @@ will contain your parsers.
 
 <!-- deno-fmt-ignore -->
 ```yaml title=".../cela/config.yml" linenums="1"
-parsers_dir: ... # /home/Documents/parsers
+parsers_dir: ... # (1)
 ```
 
+1. For example, `/home/myxi/Documents/parsers`
+
 <!-- deno-fmt-ignore -->
-!!! note
-    Please use absolute paths instead of relative ones.
+!!! warning
+    Please use absolute paths instead of relative ones. Cela does not handle relative
+    paths.
 
 Next up, create a sub-directory in the configured directory (`parsers_dir`).
 Whatever you name it will be considered as the parser's id. For my example I
@@ -61,7 +64,7 @@ In your parser's directory you need to have a source tree like this:
 <!-- deno-fmt-ignore-start-->
 To complete the example I will include the example script files for `deno`.
 === "fetcher.py"
-    ```py
+    ```py linenums="1"
     import json
     import os
     import sys
@@ -75,7 +78,7 @@ To complete the example I will include the example script files for `deno`.
         main()
     ```
 === "updater.py"
-    ```py
+    ```py linenums="1"
     import json
     import os
 
@@ -152,8 +155,8 @@ fetcher's script.
 
 ## Debugging
 
-You can see the outputs of your scripts when running with `cela` by using
-`--debug` option to enable debug logs of `cela`.
+You can see the outputs of your scripts when running with Cela by using
+`--debug` option to enable debug logs of Cela.
 
 ## Exit Codes
 
