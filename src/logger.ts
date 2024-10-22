@@ -14,6 +14,9 @@ export const LoggerMod = {
     info: (...args: (string | number)[]): void => {
         Logger.info(args.join(" "));
     },
+    warn: (...args: (string | number)[]): void => {
+        Logger.warn(args.join(" "));
+    },
     debug: (...args: (string | number | object)[]): void => {
         let str = "";
         for (const [i, v] of args.entries()) {
