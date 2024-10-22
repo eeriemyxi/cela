@@ -5,14 +5,14 @@ import * as semver from "jsr:@std/semver";
 import { parse as yaml_parse } from "jsr:@std/yaml";
 import { dirname, join } from "jsr:@std/path";
 
-import { LoggerMod as Logger } from "./logger.ts";
+import { LoggerMod } from "./logger.ts";
 import { construct_cela_cli } from "./cela_cli.ts";
 
-let AppInfo = {
+export const AppInfo = {
     INSTALL_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSERS_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSER_NAME: "NOT SET",
-    LOG_LEVEL: Logger.Levels.INFO,
+    LOG_LEVEL: LoggerMod.Levels.INFO,
     ENABLE_RESET_STATES: true,
     ENABLE_MINUS_CHECK: true,
     ENABLE_DRY_RUN: false,
@@ -20,24 +20,24 @@ let AppInfo = {
     DENO_JSON: await get_deno_json(),
 };
 
-let Increments = {
+export const Increments = {
     MAJOR: 0,
     MINOR: 0,
     PATCH: 0,
 };
 
-let VersionResetStates: { [key: string]: number } = {
+export const VersionResetStates: { [key: string]: number } = {
     MAJOR: 0,
     MINOR: 0,
     PATCH: 0,
 };
 
-const logger = Logger;
+const logger = LoggerMod;
 
-[AppInfo, Increments, VersionResetStates] = await construct_cela_cli(
+await construct_cela_cli(
     AppInfo,
     Increments,
-    Logger,
+    LoggerMod,
     VersionResetStates,
     Deno.args,
 );

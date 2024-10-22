@@ -1,14 +1,19 @@
-// deno-lint-ignore-file no-explicit-any -- IDK how to do it properly. Please help.
-
+import { AppInfo, Increments, VersionResetStates } from "./main.ts";
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
+import { LoggerMod } from "./logger.ts";
+
+type AppInfoType = typeof AppInfo;
+type IncrementsType = typeof Increments;
+type VersionResetStatesType = typeof VersionResetStates;
+type LoggerType = typeof LoggerMod;
 
 export async function construct_cela_cli(
-    AppInfo: any,
-    Increments: any,
-    Logger: any,
-    VersionResetStates: any,
-    deno_args: any,
-): Promise<[any, any, any]> {
+    AppInfo: AppInfoType,
+    Increments: IncrementsType,
+    Logger: LoggerType,
+    VersionResetStates: VersionResetStatesType,
+    deno_args: typeof Deno.args,
+): Promise<void> {
     const _cela = await new Command()
         .name("cela")
         .version(AppInfo.DENO_JSON.version)
@@ -130,7 +135,6 @@ export async function construct_cela_cli(
             AppInfo.PARSER_NAME = args[0];
         })
         .parse(deno_args);
-    return [AppInfo, Increments, VersionResetStates];
 }
 
 export default { construct_cela_cli };
