@@ -1,5 +1,4 @@
 import { colors } from "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts";
-import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts";
 import { Spinner } from "jsr:@std/cli/unstable-spinner";
 
 import * as semver from "jsr:@std/semver";
@@ -7,140 +6,43 @@ import { parse as yaml_parse } from "jsr:@std/yaml";
 import { dirname, join } from "jsr:@std/path";
 
 import { LoggerMod as Logger } from "./logger.ts";
+import { construct_cela_cli } from "./cela_cli.ts";
 
-interface ParserConfig {
-    name: string;
-    scripts: {
-        fetcher: {
-            program: string;
-            args: string;
-        };
-        updater: {
-            program: string;
-            args: string;
-        };
-    };
-}
-
-interface CelaConfig {
-    parsers_dir: string;
-}
-
-const AppInfo = {
+let AppInfo = {
     INSTALL_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSERS_DOC_LINK: "https://myxi-cela.pages.dev/custom-parsers/",
     PARSER_NAME: "NOT SET",
     LOG_LEVEL: Logger.Levels.INFO,
     ENABLE_RESET_STATES: true,
     ENABLE_MINUS_CHECK: true,
+    ENABLE_DRY_RUN: false,
     CUSTOM_VERSION: "",
     DENO_JSON: await get_deno_json(),
 };
 
-const decoder = new TextDecoder();
-
-const Increments = {
+let Increments = {
     MAJOR: 0,
     MINOR: 0,
     PATCH: 0,
 };
 
-const version_reset_states: { [key: string]: number } = {
+let VersionResetStates: { [key: string]: number } = {
     MAJOR: 0,
     MINOR: 0,
     PATCH: 0,
 };
-
-const _cela = await new Command()
-    .name("cela")
-    .version(AppInfo.DENO_JSON.version)
-    .description(
-        "Increment or decrement semantic versions on files using custom parsers.",
-    )
-    .option(
-        "-d, --debug",
-        "Enable debug logs. Useful if you want to debug your parsers.",
-        {
-            action: (_) => {
-                AppInfo.LOG_LEVEL = Logger.Levels.DEBUG;
-            },
-        },
-    )
-    .option(
-        "-r, --no-reset",
-        "Do not reset by precedence. Disables spec. 7, see https://semver.org/#spec-item-7",
-        {
-            action: (_) => {
-                AppInfo.ENABLE_RESET_STATES = false;
-            },
-        },
-    )
-    .option(
-        "-Z, --no-zero",
-        "Do not reset when a version is less than 0.",
-        {
-            action: (_) => {
-                AppInfo.ENABLE_MINUS_CHECK = false;
-            },
-        },
-    )
-    .option(
-        "-C, --custom <version:string>",
-        "Instead of incrementing, set the version to this string.",
-        {
-            action: (options) => {
-                if (options["custom"] !== undefined) {
-                    AppInfo.CUSTOM_VERSION = options["custom"];
-                }
-            },
-        },
-    )
-    .option("-M", "Increment MAJOR version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.MAJOR += 1;
-            version_reset_states.MINOR++;
-            version_reset_states.PATCH++;
-        },
-    })
-    .option("-m", "Increment MINOR version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.MINOR += 1;
-            version_reset_states.PATCH++;
-        },
-    })
-    .option("-p", "Increment PATCH version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.PATCH += 1;
-        },
-    })
-    .option("-z", "Decrement MAJOR version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.MAJOR -= 1;
-        },
-    })
-    .option("-x", "Decrement MINOR version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.MINOR -= 1;
-        },
-    })
-    .option("-c", "Decrement PATCH version by 1. Can be used multiple times.", {
-        collect: true,
-        action: (_) => {
-            Increments.PATCH -= 1;
-        },
-    })
-    .arguments("<parser_name:string>")
-    .action((_options, ...args) => {
-        AppInfo.PARSER_NAME = args[0];
-    })
-    .parse(Deno.args);
 
 const logger = Logger;
+
+[AppInfo, Increments, VersionResetStates] = await construct_cela_cli(
+    AppInfo,
+    Increments,
+    Logger,
+    VersionResetStates,
+    Deno.args,
+);
+
+const decoder = new TextDecoder();
 const spinner = new Spinner({ message: "Loading..." });
 spinner.start();
 
@@ -148,8 +50,12 @@ logger.format = "[{type}] {message}";
 logger.level = AppInfo.LOG_LEVEL;
 
 logger.debug("Increments", Increments);
-logger.debug("PARSER_NAME", AppInfo.PARSER_NAME);
-logger.debug("LOG_LEVEL", AppInfo.LOG_LEVEL);
+logger.debug("VersionResetStates", VersionResetStates);
+logger.debug("AppInfo", AppInfo);
+
+if (AppInfo.ENABLE_DRY_RUN) {
+    logger.warn("Dry running is enabled.");
+}
 
 async function get_deno_json(): Promise<{ version: string }> {
     if (import.meta.dirname === undefined) {
@@ -243,7 +149,7 @@ function update_version(
             reason = "updated version was less than 0. See -Z option.";
             reset = true;
         } else if (
-            version_reset_states[vers] > 0 && new_vers > 0 &&
+            VersionResetStates[vers] > 0 && new_vers > 0 &&
             AppInfo.ENABLE_RESET_STATES
         ) {
             new_vers = 0;
@@ -351,6 +257,14 @@ async function trigger_updater_command(
     fetcher_json: { version: string },
     version?: semver.SemVer,
 ): Promise<number> {
+    if (AppInfo.ENABLE_DRY_RUN) {
+        logger.debug(
+            "dry run",
+            "skipping running updater script and returning 0 as exit code",
+        );
+        return 0;
+    }
+
     const updater_command = new Deno.Command(
         parser_conf.scripts.updater.program,
         {
@@ -476,13 +390,15 @@ async function main(): Promise<void> {
     }
 
     if (!matched) {
+        spinner.stop();
         logger.error(
             "Invalid Parser Name",
-            "Provided parser name",
+            " parser name",
             '"' + AppInfo.PARSER_NAME + '"',
             "did not match any directory in",
             conf.parsers_dir,
         );
+        Deno.exit(1);
     }
 }
 

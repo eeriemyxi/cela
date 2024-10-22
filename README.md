@@ -28,7 +28,7 @@ Deno (v2) runtime is required to run.
 
 ```
 Usage:   cela <parser_name>
-Version: 0.3.0
+Version: 0.4.0
 
 Description:
 
@@ -39,6 +39,7 @@ Options:
   -h, --help                 - Show this help.
   -V, --version              - Show the version number for this program.
   -d, --debug                - Enable debug logs. Useful if you want to debug your parsers.
+  -D, --dry-run              - Do a dry run. Skips running updater script (fetcher script is ran).
   -r, --no-reset             - Do not reset by precedence. Disables spec. 7, see
                                https://semver.org/#spec-item-7
   -Z, --no-zero              - Do not reset when a version is less than 0.
