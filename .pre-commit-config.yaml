@@ -1,11 +1,11 @@
 repos:
-- repo: https://github.com/ThatOneBro/pre-commit-deno-typecheck
-  rev: v0.2.0
-  hooks:
-    - id: deno-typecheck
-      args: ["."]
-- repo: https://github.com/nozaq/pre-commit-deno
-  rev: 0.1.0
-  hooks:
-    - id: deno-fmt
-    - id: deno-lint
+    - repo: https://github.com/ThatOneBro/pre-commit-deno-typecheck
+      rev: v0.2.0
+      hooks:
+          - id: deno-typecheck
+            args: ["."]
+    - repo: https://github.com/nozaq/pre-commit-deno
+      rev: 0.1.0
+      hooks:
+          - id: deno-fmt
+          - id: deno-lint
